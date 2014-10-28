@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import ua.mind.mean.Means;
 import ua.mind.meanimpl.helpers.CountingJob;
 import ua.mind.meanimpl.helpers.HarmonicCountingJob;
+import ua.mind.meanimpl.helpers.InterquartileCountingJob;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -69,18 +70,18 @@ public class MeanImpl implements Means {
 
     @Override
     public double getInterquartile() {
-        double harmonicMean = 0.0;
+        double interquartile = 0.0;
         Collections.sort(baseList);
 
-        int numberOfCountThreads = (baseList.size() - baseList.size()/2) / COUNTING_THREAD_QUANTITY + 1;
+        int numberOfCountThreads = (baseList.size() - 2 * baseList.size() / 4) / COUNTING_THREAD_QUANTITY + 1;
         List<CountingJob> jobs = new ArrayList<>();
         for (int i = 0; i < numberOfCountThreads; i++) {
-            int start = i * COUNTING_THREAD_QUANTITY;
-            int end = (i + 1) * COUNTING_THREAD_QUANTITY < baseList.size() ? (i + 1) * COUNTING_THREAD_QUANTITY : baseList.size();
-            jobs.add(new HarmonicCountingJob(baseList, start, end));
+            int start = baseList.size() / 4 + i * COUNTING_THREAD_QUANTITY;
+            int end = (i + 1) * COUNTING_THREAD_QUANTITY < baseList.size() - baseList.size() / 4 ? (i + 1) * COUNTING_THREAD_QUANTITY : baseList.size() - baseList.size() / 4;
+            jobs.add(new InterquartileCountingJob(baseList, start, end));
         }
-        harmonicMean = countInThreads(numberOfCountThreads, jobs);
-        return baseList.size() / harmonicMean;
+        interquartile  = countInThreads(numberOfCountThreads, jobs);
+        return (2*interquartile)/baseList.size() ;
     }
 
 
